@@ -1,5 +1,6 @@
-const SLACK_WEBHOOK_URL =
-  "https://hooks.slack.com/services/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";
+require('dotenv').config();
+
+const SLACK_WEBHOOK_URL = process.env.SLACK_WEBHOOK_URL;
 const slack = require("slack-notify")(SLACK_WEBHOOK_URL);
 
 function slackHelper() {
