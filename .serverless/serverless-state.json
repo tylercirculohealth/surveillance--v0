@@ -175,7 +175,7 @@
                 "S3Bucket": {
                   "Ref": "ServerlessDeploymentBucket"
                 },
-                "S3Key": "serverless/friday-demo/dev/1624042642477-2021-06-18T18:57:22.477Z/friday-demo.zip"
+                "S3Key": "serverless/friday-demo/dev/1624541193552-2021-06-24T13:26:33.552Z/friday-demo.zip"
               },
               "Handler": "handler.hello",
               "Runtime": "nodejs12.x",
@@ -193,14 +193,14 @@
               "HelloLogGroup"
             ]
           },
-          "HelloLambdaVersionvTm8TdaPFtZEl3gsVnsQBRXGeenH7YF0a2UTL4fQI": {
+          "HelloLambdaVersionRt2PpBCAksRsLYJT9cIc2kFUcGO4M7QILQLIkSjiM": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
                 "Ref": "HelloLambdaFunction"
               },
-              "CodeSha256": "RiEkRu0zZOSft0BX0PPnHyqkMpqO6JU+EEvC8Jv4Cgk="
+              "CodeSha256": "j6ImHxqjvIF8E8nqfuJYZU+OJnQpQKDaPp8Kwvv1lIA="
             }
           },
           "scannedData": {
@@ -222,6 +222,32 @@
               "ProvisionedThroughput": {
                 "ReadCapacityUnits": 1,
                 "WriteCapacityUnits": 1
+              }
+            }
+          },
+          "surveillanceAlertMsg": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+              "QueueName": "surveillanceAlertMsg"
+            }
+          },
+          "SQSPolicy": {
+            "Type": "AWS::SQS::QueuePolicy",
+            "Properties": {
+              "Queues": [
+                "https://sqs.us-east-1.amazonaws.com/190089000663/surveillanceAlertMsg"
+              ],
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Action": [
+                      "SQS:SendMessage",
+                      "SQS:ReceiveMessage"
+                    ],
+                    "Effect": "Allow",
+                    "Resource": "arn:aws:sqs:us-east-1:190089000663:surveillanceAlertMsg"
+                  }
+                ]
               }
             }
           },
@@ -270,7 +296,7 @@
           "HelloLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "HelloLambdaVersionvTm8TdaPFtZEl3gsVnsQBRXGeenH7YF0a2UTL4fQI"
+              "Ref": "HelloLambdaVersionRt2PpBCAksRsLYJT9cIc2kFUcGO4M7QILQLIkSjiM"
             },
             "Export": {
               "Name": "sls-friday-demo-dev-HelloLambdaFunctionQualifiedArn"
@@ -373,7 +399,7 @@
         "timeout": 6,
         "runtime": "nodejs12.x",
         "vpc": {},
-        "versionLogicalId": "HelloLambdaVersionvTm8TdaPFtZEl3gsVnsQBRXGeenH7YF0a2UTL4fQI"
+        "versionLogicalId": "HelloLambdaVersionRt2PpBCAksRsLYJT9cIc2kFUcGO4M7QILQLIkSjiM"
       }
     },
     "resources": {
@@ -397,6 +423,32 @@
             "ProvisionedThroughput": {
               "ReadCapacityUnits": 1,
               "WriteCapacityUnits": 1
+            }
+          }
+        },
+        "surveillanceAlertMsg": {
+          "Type": "AWS::SQS::Queue",
+          "Properties": {
+            "QueueName": "surveillanceAlertMsg"
+          }
+        },
+        "SQSPolicy": {
+          "Type": "AWS::SQS::QueuePolicy",
+          "Properties": {
+            "Queues": [
+              "https://sqs.us-east-1.amazonaws.com/190089000663/surveillanceAlertMsg"
+            ],
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Action": [
+                    "SQS:SendMessage",
+                    "SQS:ReceiveMessage"
+                  ],
+                  "Effect": "Allow",
+                  "Resource": "arn:aws:sqs:us-east-1:190089000663:surveillanceAlertMsg"
+                }
+              ]
             }
           }
         },
@@ -461,7 +513,7 @@
     "artifact": "/Users/tyleradams/Documents/friday-demo/.serverless/friday-demo.zip"
   },
   "package": {
-    "artifactDirectoryName": "serverless/friday-demo/dev/1624042642477-2021-06-18T18:57:22.477Z",
+    "artifactDirectoryName": "serverless/friday-demo/dev/1624541193552-2021-06-24T13:26:33.552Z",
     "artifact": "friday-demo.zip"
   }
 }

@@ -6,10 +6,10 @@ const { differenceWith, isEqual } = require("lodash");
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const request = require("axios");
+const { sqsAlert } = require("./sqshelper");
 
 // Todo: change to async
-// Todo: add AWS SNS
-// Todo: add env file to hide x,y,z variable
+
 module.exports.hello = (event, context, callback) => {
   let todaysData, previousData;
 
@@ -59,10 +59,11 @@ module.exports.hello = (event, context, callback) => {
         .promise();
     })
 
-    // If retrieved data contains new html, send a msg to the slack channel
+    // If retrieved data contains new html, send a msg to the slack channel and write a msg to SQS
     .then(() => {
       if (todaysData.length) {
         slackHelper();
+        sqsAlert();
       }
       callback(null, { test: todaysData });
     })
