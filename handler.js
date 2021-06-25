@@ -1,12 +1,10 @@
-// const { default: axios } = require('axios');
 const { extractListingsFromHTML } = require("./helpers");
-const { slackHelper } = require("./slack");
-
 const { differenceWith, isEqual } = require("lodash");
+// const { sqsAlert } = require("./sqshelper");
 const AWS = require("aws-sdk");
+const axios = require('axios');
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const request = require("axios");
-const { sqsAlert } = require("./sqshelper");
 
 // Todo: change to async
 
@@ -62,8 +60,19 @@ module.exports.hello = (event, context, callback) => {
     // If retrieved data contains new html, send a msg to the slack channel and write a msg to SQS
     .then(() => {
       if (todaysData.length) {
-        slackHelper();
-        sqsAlert();
+        axios
+          .post(
+            "https://vl2gpt9uoh.execute-api.us-east-1.amazonaws.com/dev/notification",
+            {
+              url: "http://18.222.127.110/",
+            }
+          )
+          .then(function (response) {
+            console.log(response);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
       }
       callback(null, { test: todaysData });
     })

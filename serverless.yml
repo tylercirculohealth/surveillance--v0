@@ -1,5 +1,5 @@
 service: friday-demo
-configValidationMode: off
+configValidationMode: on
 
 
 frameworkVersion: '2'
@@ -10,13 +10,6 @@ provider:
 functions:
   hello:
     handler: handler.hello
-    events: 
-      -sqs:
-        arn:
-          Fn::GetAtt:
-            -surveillanceAlertMsg
-            -Arn
-
 
 
 resources:
@@ -34,26 +27,7 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    surveillanceAlertMsg:
-      Type: "AWS::SQS::Queue"
-      Properties:
-        QueueName: "surveillanceAlertMsg"
     
-
-    SQSPolicy: 
-     Type: AWS::SQS::QueuePolicy
-     Properties: 
-      Queues: 
-      - "https://sqs.us-east-1.amazonaws.com/190089000663/surveillanceAlertMsg"
-      PolicyDocument: 
-       Statement: 
-        - 
-          Action: 
-            - "SQS:SendMessage" 
-            - "SQS:ReceiveMessage"
-          Effect: "Allow"
-          Resource: "arn:aws:sqs:us-east-1:190089000663:surveillanceAlertMsg"
-
     DynamoDBIamPolicy: 
       Type: AWS::IAM::Policy
       DependsOn: scannedData
