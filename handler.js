@@ -6,7 +6,7 @@ const dynamo = new AWS.DynamoDB.DocumentClient();
 const request = require("axios");
 const { getUrl } = require("./url");
 
-module.exports.hello = async (callback) => {
+module.exports.hello = async (event, context, callback) => {
   let todaysData, previousData;
 
   const url = await getUrl();
