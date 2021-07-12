@@ -4,17 +4,20 @@ const { differenceWith, isEqual } = require("lodash");
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const request = require("axios");
+const { getUrl } = require("./url");
 
-module.exports.hello = (callback) => {
+module.exports.hello = async (callback) => {
   let todaysData, previousData;
 
-  request("http://18.222.127.110/")
+  const url = await getUrl();
+
+  request(url.href)
     .then(({ data }) => {
       previousData = extractListingsFromHTML(data);
 
       return dynamo
         .scan({
-          TableName: "scannedData",
+          TableName: "scannedData"
         })
         .promise();
     })
@@ -25,9 +28,7 @@ module.exports.hello = (callback) => {
 
       todaysData = differenceWith(previousData, yesterdaysData, isEqual);
 
-      const dataToDelete = response.Items[0]
-        ? response.Items[0].id
-        : null;
+      const dataToDelete = response.Items[0] ? response.Items[0].id : null;
 
       // If the data is the same, delete old and input new
       if (dataToDelete) {
@@ -35,8 +36,8 @@ module.exports.hello = (callback) => {
           .delete({
             TableName: "scannedData",
             Key: {
-              id: dataToDelete,
-            },
+              id: dataToDelete
+            }
           })
           .promise();
       } else return;
@@ -47,16 +48,16 @@ module.exports.hello = (callback) => {
           TableName: "scannedData",
           Item: {
             id: new Date().toString(),
-            dataDump: previousData,
+            dataDump: previousData
             // urlId: //urlId
-          },
+          }
         })
         .promise();
     })
     // If retrieved data contains new html, publish to SNS => write a msg to SQS => Loop => Whisper
     .then(() => {
       if (todaysData.length) {
-        sendSnsMsg()
+        sendSnsMsg();
       }
       callback(null, { dataDump: todaysData });
     })
