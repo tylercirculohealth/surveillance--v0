@@ -1,14 +1,11 @@
 const { extractListingsFromHTML } = require("./helpers");
+const { sendSnsMsg } = require("./sns_publishtopic");
 const { differenceWith, isEqual } = require("lodash");
-// const { sqsAlert } = require("./sqshelper");
 const AWS = require("aws-sdk");
-const axios = require('axios');
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const request = require("axios");
 
-// Todo: change to async
-
-module.exports.hello = (event, context, callback) => {
+module.exports.hello = (callback) => {
   let todaysData, previousData;
 
   request("http://18.222.127.110/")
@@ -22,24 +19,23 @@ module.exports.hello = (event, context, callback) => {
         .promise();
     })
     .then((response) => {
-      let yesterdaysData = response.Items[0] ? response.Items[0].test : [];
+      let yesterdaysData = response.Items[0] ? response.Items[0].dataDump : [];
 
       // Use lodash method to deeply compare the old response to the new in Dynamo
 
       todaysData = differenceWith(previousData, yesterdaysData, isEqual);
 
       const dataToDelete = response.Items[0]
-        ? response.Items[0].listingId
+        ? response.Items[0].id
         : null;
 
       // If the data is the same, delete old and input new
-
       if (dataToDelete) {
         return dynamo
           .delete({
             TableName: "scannedData",
             Key: {
-              listingId: dataToDelete,
+              id: dataToDelete,
             },
           })
           .promise();
@@ -50,31 +46,19 @@ module.exports.hello = (event, context, callback) => {
         .put({
           TableName: "scannedData",
           Item: {
-            listingId: new Date().toString(),
-            test: previousData,
+            id: new Date().toString(),
+            dataDump: previousData,
+            // urlId: //urlId
           },
         })
         .promise();
     })
-
-    // If retrieved data contains new html, send a msg to the slack channel and write a msg to SQS
+    // If retrieved data contains new html, publish to SNS => write a msg to SQS => Loop => Whisper
     .then(() => {
       if (todaysData.length) {
-        axios
-          .post(
-            "https://vl2gpt9uoh.execute-api.us-east-1.amazonaws.com/dev/notification",
-            {
-              url: "http://18.222.127.110/",
-            }
-          )
-          .then(function (response) {
-            console.log(response);
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
+        sendSnsMsg()
       }
-      callback(null, { test: todaysData });
+      callback(null, { dataDump: todaysData });
     })
     .catch(callback);
 };

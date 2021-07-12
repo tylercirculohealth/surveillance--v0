@@ -161,7 +161,7 @@
           "S3Bucket": {
             "Ref": "ServerlessDeploymentBucket"
           },
-          "S3Key": "serverless/friday-demo/dev/1624564919527-2021-06-24T20:01:59.527Z/friday-demo.zip"
+          "S3Key": "serverless/friday-demo/dev/1625776289281-2021-07-08T20:31:29.281Z/friday-demo.zip"
         },
         "Handler": "handler.hello",
         "Runtime": "nodejs12.x",
@@ -179,14 +179,14 @@
         "HelloLogGroup"
       ]
     },
-    "HelloLambdaVersionRwwTJFQMSPKhLNNPKHQTazjOcaNcFYaG6TlbUPMiE": {
+    "HelloLambdaVersionkMZzeOqD60afyA29oDRZhNz5sfZL11hdx4Jz4": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
           "Ref": "HelloLambdaFunction"
         },
-        "CodeSha256": "delM5iQj84hb6sjs7cKRn/30yj8rz1IHDl4YUZJVaRE="
+        "CodeSha256": "B9zvAZLOUUkSltqpNG/I/sOkP1Z/FDXVlSnxVWeTK1c="
       }
     },
     "scannedData": {
@@ -195,13 +195,13 @@
         "TableName": "scannedData",
         "AttributeDefinitions": [
           {
-            "AttributeName": "listingId",
+            "AttributeName": "id",
             "AttributeType": "S"
           }
         ],
         "KeySchema": [
           {
-            "AttributeName": "listingId",
+            "AttributeName": "id",
             "KeyType": "HASH"
           }
         ],
@@ -256,7 +256,7 @@
     "HelloLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "HelloLambdaVersionRwwTJFQMSPKhLNNPKHQTazjOcaNcFYaG6TlbUPMiE"
+        "Ref": "HelloLambdaVersionkMZzeOqD60afyA29oDRZhNz5sfZL11hdx4Jz4"
       },
       "Export": {
         "Name": "sls-friday-demo-dev-HelloLambdaFunctionQualifiedArn"
