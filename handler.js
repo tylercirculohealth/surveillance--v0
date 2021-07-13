@@ -3,8 +3,7 @@ const { sendSnsMsg } = require("./sns_publishtopic");
 const { differenceWith, isEqual } = require("lodash");
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
-const request = require("axios");
-const { getUrl } = require("./url");
+const axios = require("axios");
 const DIFF_TABLE = process.env.DIFF_TABLE;
 const LATEST_REVISION_INDEX = process.env.LATEST_REVISION_INDEX;
 
@@ -58,9 +57,18 @@ const putLatestDiff = async (urlId, content, version = 1, diff = null) => {
     .promise();
 };
 
+const getUrl = async () => {
+  const urls = await axios
+    .get("https://2t30hb5e29.execute-api.us-east-1.amazonaws.com/dev/urls")
+    .then((res) => res.data);
+
+  // for now just return one url for testing
+  return urls[0];
+};
+
 module.exports.hello = async (event, context, callback) => {
   const url = await getUrl();
-  const urlContent = await request(url.href).then(({ data }) =>
+  const urlContent = await axios(url.href).then(({ data }) =>
     extractListingsFromHTML(data)
   );
   const latestForUrl = await getMostRecentDiff(url);
