@@ -5,61 +5,74 @@ const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const request = require("axios");
 const { getUrl } = require("./url");
+const DIFF_TABLE = process.env.DIFF_TABLE;
+const LATEST_REVISION_INDEX = process.env.LATEST_REVISION_INDEX;
+
+const getMostRecentDiff = async (url) => {
+  return await dynamo
+    .query({
+      TableName: DIFF_TABLE,
+      IndexName: LATEST_REVISION_INDEX,
+      Limit: 1,
+      KeyConditionExpression: "urlId = :urlId and latest = :latest",
+      ExpressionAttributeValues: {
+        ":urlId": url.id,
+        ":latest": "true"
+      }
+    })
+    .promise()
+    .then((data) => data.Items[0]);
+};
+
+const updateUrlDiff = async (url, mostRecentDiff, content, diff) => {
+  await dynamo
+    .update({
+      TableName: DIFF_TABLE,
+      Key: {
+        urlId: mostRecentDiff.urlId,
+        version: mostRecentDiff.version
+      },
+      UpdateExpression: "set latest = :latest",
+      ExpressionAttributeValues: {
+        ":latest": "false"
+      }
+    })
+    .promise();
+
+  await putLatestDiff(url.id, content, mostRecentDiff.version + 1, diff);
+};
+
+const putLatestDiff = async (urlId, content, version = 1, diff = null) => {
+  await dynamo
+    .put({
+      TableName: DIFF_TABLE,
+      Item: {
+        date: new Date().toISOString(),
+        urlId,
+        version,
+        content,
+        diff,
+        latest: "true"
+      }
+    })
+    .promise();
+};
 
 module.exports.hello = async (event, context, callback) => {
-  let todaysData, previousData;
-
   const url = await getUrl();
+  const urlContent = await request(url.href).then(({ data }) =>
+    extractListingsFromHTML(data)
+  );
+  const latestForUrl = await getMostRecentDiff(url);
 
-  request(url.href)
-    .then(({ data }) => {
-      previousData = extractListingsFromHTML(data);
-
-      return dynamo
-        .scan({
-          TableName: "scannedData"
-        })
-        .promise();
-    })
-    .then((response) => {
-      let yesterdaysData = response.Items[0] ? response.Items[0].dataDump : [];
-
-      // Use lodash method to deeply compare the old response to the new in Dynamo
-
-      todaysData = differenceWith(previousData, yesterdaysData, isEqual);
-
-      const dataToDelete = response.Items[0] ? response.Items[0].id : null;
-
-      // If the data is the same, delete old and input new
-      if (dataToDelete) {
-        return dynamo
-          .delete({
-            TableName: "scannedData",
-            Key: {
-              id: dataToDelete
-            }
-          })
-          .promise();
-      } else return;
-    })
-    .then(() => {
-      return dynamo
-        .put({
-          TableName: "scannedData",
-          Item: {
-            id: new Date().toString(),
-            dataDump: previousData
-            // urlId: //urlId
-          }
-        })
-        .promise();
-    })
-    // If retrieved data contains new html, publish to SNS => write a msg to SQS => Loop => Whisper
-    .then(() => {
-      if (todaysData.length) {
-        sendSnsMsg();
-      }
-      callback(null, { dataDump: todaysData });
-    })
-    .catch(callback);
+  if (latestForUrl) {
+    const diff = differenceWith([urlContent], [latestForUrl.content], isEqual);
+    if (diff.length) {
+      await updateUrlDiff(url, latestForUrl, urlContent, diff[0]);
+      // If retrieved data contains new html, publish to SNS => write a msg to SQS => Loop => Whisper
+      sendSnsMsg();
+    }
+  } else {
+    await putLatestDiff(url.id, urlContent);
+  }
 };

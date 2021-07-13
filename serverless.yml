@@ -1,40 +1,59 @@
 service: friday-demo
 configValidationMode: on
 
-
-frameworkVersion: '2'
+frameworkVersion: "2"
 provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
+  environment:
+    DIFF_TABLE: diff
+    LATEST_REVISION_INDEX: latestRevision
 functions:
   hello:
     handler: handler.hello
 
-
 resources:
   Resources:
-    scannedData:
+    DiffTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: scannedData
+        TableName: ${self:provider.environment.DIFF_TABLE}
         AttributeDefinitions:
-          - AttributeName: id
+          - AttributeName: urlId
+            AttributeType: S
+          - AttributeName: version
+            AttributeType: N
+          - AttributeName: latest
             AttributeType: S
         KeySchema:
-          - AttributeName: id
+          - AttributeName: urlId
             KeyType: HASH
+          - AttributeName: version
+            KeyType: RANGE
+        GlobalSecondaryIndexes:
+          - IndexName: ${self:provider.environment.LATEST_REVISION_INDEX}
+            KeySchema:
+              - AttributeName: urlId
+                KeyType: HASH
+              - AttributeName: latest
+                KeyType: RANGE
+            Projection:
+              ProjectionType: "ALL"
+            ProvisionedThroughput:
+              ReadCapacityUnits: 1
+              WriteCapacityUnits: 1
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-    
-    DynamoDBIamPolicy: 
+
+    DynamoDBIamPolicy:
       Type: AWS::IAM::Policy
-      DependsOn: scannedData
+      DependsOn: DiffTable
       Properties:
         PolicyName: lambda-dynamodb
         PolicyDocument:
-          Version: '2012-10-17'
+          Version: "2012-10-17"
           Statement:
             - Effect: Allow
               Action:
@@ -45,6 +64,8 @@ resources:
                 - dynamodb:PutItem
                 - dynamodb:UpdateItem
                 - dynamodb:DeleteItem
-              Resource: arn:aws:dynamodb:*:*:table/scannedData
+              Resource:
+                - arn:aws:dynamodb:*:*:table/${self:provider.environment.DIFF_TABLE}
+                - arn:aws:dynamodb:*:*:table/${self:provider.environment.DIFF_TABLE}/index/${self:provider.environment.LATEST_REVISION_INDEX}
         Roles:
           - Ref: IamRoleLambdaExecution
