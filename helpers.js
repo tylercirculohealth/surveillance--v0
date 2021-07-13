@@ -4,14 +4,11 @@ function extractListingsFromHTML(html) {
   const $ = cheerio.load(html);
 
   const allData = $("body").html().trim();
-  const newData = [];
-  newData.push({ allData });
-  console.log(newData);
-  return newData;
+  return allData;
 }
 
 module.exports = {
-  extractListingsFromHTML,
+  extractListingsFromHTML
 };
 
 // Cheerio is the most lightweight way to get our testable data.
