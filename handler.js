@@ -42,6 +42,7 @@ const updateUrlDiff = async (url, mostRecentDiff, content, diff) => {
 };
 
 const putLatestDiff = async (urlId, content, version = 1, diff = null) => {
+  console.log("Putting diff " + urlId);
   await dynamo
     .put({
       TableName: DIFF_TABLE,
@@ -77,8 +78,16 @@ const scanUrl = async (url) => {
 };
 
 module.exports.hello = async (event, context, callback) => {
-  const urls = await axios
-    .get(process.env.GET_URLS_ENDPOINT)
-    .then((res) => res.data);
-  await Promise.all(urls.map(scanUrl));
+  try {
+    const urls = await axios
+      .get(process.env.GET_URLS_ENDPOINT)
+      .then((res) => res.data.splice(0, 2));
+    await Promise.all(
+      urls.map(async (url) => {
+        await scanUrl(url);
+      })
+    );
+  } catch (err) {
+    console.error(err);
+  }
 };
