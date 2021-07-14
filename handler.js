@@ -80,5 +80,5 @@ module.exports.hello = async (event, context, callback) => {
   const urls = await axios
     .get(process.env.GET_URLS_ENDPOINT)
     .then((res) => res.data);
-  Promise.all(urls.map(scanUrl));
+  await Promise.all(urls.map(scanUrl));
 };
