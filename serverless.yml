@@ -9,6 +9,7 @@ provider:
   environment:
     DIFF_TABLE: diff
     LATEST_REVISION_INDEX: latestRevision
+    GET_URLS_ENDPOINT: "https://2t30hb5e29.execute-api.us-east-1.amazonaws.com/dev/urls"
   iamRoleStatements:
     - Effect: "Allow"
       Action: "sns:Publish"
