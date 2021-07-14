@@ -57,16 +57,8 @@ const putLatestDiff = async (urlId, content, version = 1, diff = null) => {
     .promise();
 };
 
-const getUrl = async () => {
-  const urls = await axios
-    .get("https://2t30hb5e29.execute-api.us-east-1.amazonaws.com/dev/urls")
-    .then((res) => res.data);
-
-  // for now just return one url for testing
-  return urls[0];
-};
-
 const scanUrl = async (url) => {
+  console.log("Scanning " + url.href);
   const urlContent = await axios(url.href).then(({ data }) =>
     extractListingsFromHTML(data)
   );
@@ -85,6 +77,8 @@ const scanUrl = async (url) => {
 };
 
 module.exports.hello = async (event, context, callback) => {
-  const url = await getUrl();
-  await scanUrl(url);
+  const urls = await axios
+    .get(process.env.GET_URLS_ENDPOINT)
+    .then((res) => res.data);
+  Promise.all(urls.map(scanUrl));
 };
