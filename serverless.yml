@@ -18,6 +18,8 @@ provider:
 functions:
   hello:
     handler: handler.hello
+    events:
+      - schedule: rate(10 minutes)
 
 resources:
   Resources:
