@@ -9,6 +9,11 @@ provider:
   environment:
     DIFF_TABLE: diff
     LATEST_REVISION_INDEX: latestRevision
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action: "sns:Publish"
+      Resource: "arn:aws:sns:us-east-1:*:*"
+
 functions:
   hello:
     handler: handler.hello

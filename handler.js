@@ -66,8 +66,7 @@ const getUrl = async () => {
   return urls[0];
 };
 
-module.exports.hello = async (event, context, callback) => {
-  const url = await getUrl();
+const scanUrl = async (url) => {
   const urlContent = await axios(url.href).then(({ data }) =>
     extractListingsFromHTML(data)
   );
@@ -78,9 +77,14 @@ module.exports.hello = async (event, context, callback) => {
     if (diff.length) {
       await updateUrlDiff(url, latestForUrl, urlContent, diff[0]);
       // If retrieved data contains new html, publish to SNS => write a msg to SQS => Loop => Whisper
-      sendSnsMsg();
+      await sendSnsMsg(url);
     }
   } else {
     await putLatestDiff(url.id, urlContent);
   }
+};
+
+module.exports.hello = async (event, context, callback) => {
+  const url = await getUrl();
+  await scanUrl(url);
 };
