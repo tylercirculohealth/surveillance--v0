@@ -77,7 +77,7 @@ const scanUrl = async (url) => {
   }
 };
 
-module.exports.hello = async (event, context, callback) => {
+module.exports.diffCheck = async (event, context, callback) => {
   try {
     const urls = await axios
       .get(process.env.GET_URLS_ENDPOINT)

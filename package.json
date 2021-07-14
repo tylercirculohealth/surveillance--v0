@@ -9,7 +9,7 @@
     "slack-notify": "^0.1.7",
     "sqs": "^2.0.2"
   },
-  "name": "friday-demo",
+  "name": "diff-checker",
   "version": "1.0.0",
   "main": "handler.js",
   "devDependencies": {},
