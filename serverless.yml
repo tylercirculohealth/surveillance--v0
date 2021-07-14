@@ -1,5 +1,5 @@
-service: friday-demo
-configValidationMode: on
+service: diff-checker
+configValidationMode: error
 
 frameworkVersion: "2"
 provider:
@@ -10,14 +10,16 @@ provider:
     DIFF_TABLE: diff
     LATEST_REVISION_INDEX: latestRevision
     GET_URLS_ENDPOINT: "https://2t30hb5e29.execute-api.us-east-1.amazonaws.com/dev/urls"
-  iamRoleStatements:
-    - Effect: "Allow"
-      Action: "sns:Publish"
-      Resource: "arn:aws:sns:us-east-1:*:*"
+  iam:
+    role:
+      statements:
+        - Effect: "Allow"
+          Action: "sns:Publish"
+          Resource: "arn:aws:sns:us-east-1:*:*"
 
 functions:
-  hello:
-    handler: handler.hello
+  diffChecker:
+    handler: handler.diffCheck
     events:
       - schedule: rate(5 hours)
 
