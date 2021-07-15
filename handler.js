@@ -3,6 +3,7 @@ const { sendSnsMsg } = require("./sns_publishtopic");
 const { differenceWith, isEqual } = require("lodash");
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
+const secret = new AWS.SecretsManager();
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const DIFF_TABLE = process.env.DIFF_TABLE;
@@ -80,7 +81,15 @@ const scanUrl = async (url) => {
 
 module.exports.diffCheck = async (event, context, callback) => {
   try {
-    const token = jwt.sign({}, process.env.SECRET_KEY);
+    const key = await secret
+      .getSecretValue({
+        SecretId: process.env.SECRET_ID
+      })
+      .promise()
+      .then((data) => {
+        return JSON.parse(data.SecretString)[process.env.SECRET_KEY];
+      });
+    const token = jwt.sign({}, key);
 
     const urls = await axios
       .get(process.env.GET_URLS_ENDPOINT, {
