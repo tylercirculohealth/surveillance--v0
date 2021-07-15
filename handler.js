@@ -4,6 +4,7 @@ const { differenceWith, isEqual } = require("lodash");
 const AWS = require("aws-sdk");
 const dynamo = new AWS.DynamoDB.DocumentClient();
 const axios = require("axios");
+const jwt = require("jsonwebtoken");
 const DIFF_TABLE = process.env.DIFF_TABLE;
 const LATEST_REVISION_INDEX = process.env.LATEST_REVISION_INDEX;
 
@@ -79,8 +80,12 @@ const scanUrl = async (url) => {
 
 module.exports.diffCheck = async (event, context, callback) => {
   try {
+    const token = jwt.sign({}, process.env.SECRET_KEY);
+
     const urls = await axios
-      .get(process.env.GET_URLS_ENDPOINT)
+      .get(process.env.GET_URLS_ENDPOINT, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
       .then((res) => res.data.splice(0, 2));
     await Promise.all(
       urls.map(async (url) => {

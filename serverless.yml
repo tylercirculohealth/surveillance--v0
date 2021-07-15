@@ -1,5 +1,6 @@
 service: diff-checker
 configValidationMode: error
+useDotenv: true
 
 frameworkVersion: "2"
 provider:
