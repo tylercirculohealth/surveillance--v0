@@ -77,6 +77,25 @@ const scanUrl = async (url) => {
   } else {
     await putLatestDiff(url.id, urlContent);
   }
+
+  const key = await secret
+    .getSecretValue({
+      SecretId: process.env.SECRET_ID
+    })
+    .promise()
+    .then((data) => {
+      return JSON.parse(data.SecretString)[process.env.SECRET_KEY];
+    });
+  const token = jwt.sign({}, key);
+
+  // update next schedule via api
+  await axios({
+    url:
+      "https://2t30hb5e29.execute-api.us-east-1.amazonaws.com/dev/url/" +
+      url.id,
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` }
+  });
 };
 
 module.exports.diffCheck = async (event, context, callback) => {
@@ -91,11 +110,19 @@ module.exports.diffCheck = async (event, context, callback) => {
       });
     const token = jwt.sign({}, key);
 
+    const now = new Date();
     const urls = await axios
       .get(process.env.GET_URLS_ENDPOINT, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      .then((res) => res.data.splice(0, 2));
+      .then((res) => {
+        return res.data
+          .filter((d) => {
+            // get only urls where nextScheduledScan is in the past (or no value)
+            return d.nextScheduledScan ? d.nextScheduledScan < now : true;
+          })
+          .splice(0, 2);
+      });
     await Promise.all(
       urls.map(async (url) => {
         await scanUrl(url);
