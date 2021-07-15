@@ -1,6 +1,5 @@
 service: diff-checker
 configValidationMode: error
-useDotenv: true
 
 frameworkVersion: "2"
 provider:
@@ -20,7 +19,7 @@ provider:
           Action: "sns:Publish"
           Resource: "arn:aws:sns:us-east-1:*:*"
         - Effect: "Allow"
-          Action: "secretsmanager:GetSEcretValue"
+          Action: "secretsmanager:GetSecretValue"
           Resource: "arn:aws:secretsmanager:us-east-1:*:*"
 
 functions:
