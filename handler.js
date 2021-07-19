@@ -25,7 +25,7 @@ const getMostRecentDiff = async (url) => {
     .then((data) => data.Items[0]);
 };
 
-const updateUrlDiff = async (url, mostRecentDiff, content, diff) => {
+const updateUrlDiff = async (url, mostRecentDiff, content) => {
   await dynamo
     .update({
       TableName: DIFF_TABLE,
@@ -40,10 +40,10 @@ const updateUrlDiff = async (url, mostRecentDiff, content, diff) => {
     })
     .promise();
 
-  await putLatestDiff(url.id, content, mostRecentDiff.version + 1, diff);
+  await putLatestDiff(url.id, content, mostRecentDiff.version + 1);
 };
 
-const putLatestDiff = async (urlId, content, version = 1, diff = null) => {
+const putLatestDiff = async (urlId, content, version = 1) => {
   console.log("Putting diff " + urlId);
   await dynamo
     .put({
@@ -53,7 +53,6 @@ const putLatestDiff = async (urlId, content, version = 1, diff = null) => {
         urlId,
         version,
         content,
-        diff,
         latest: "true"
       }
     })
@@ -70,7 +69,7 @@ const scanUrl = async (url) => {
   if (latestForUrl) {
     const diff = differenceWith([urlContent], [latestForUrl.content], isEqual);
     if (diff.length) {
-      await updateUrlDiff(url, latestForUrl, urlContent, diff[0]);
+      await updateUrlDiff(url, latestForUrl, urlContent);
       // If retrieved data contains new html, publish to SNS => write a msg to SQS => Loop => Whisper
       await sendSnsMsg(url);
     }
