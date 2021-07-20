@@ -59,7 +59,7 @@ const putLatestDiff = async (urlId, content, version = 1) => {
     .promise();
 };
 
-const scanUrl = async (url) => {
+const scanUrl = async (url, token) => {
   console.log("Scanning " + url.href);
   const urlContent = await axios(url.href).then(({ data }) =>
     extractListingsFromHTML(data)
@@ -77,16 +77,6 @@ const scanUrl = async (url) => {
     await putLatestDiff(url.id, urlContent);
   }
 
-  const key = await secret
-    .getSecretValue({
-      SecretId: process.env.SECRET_ID
-    })
-    .promise()
-    .then((data) => {
-      return JSON.parse(data.SecretString)[process.env.SECRET_KEY];
-    });
-  const token = jwt.sign({}, key);
-
   // update next schedule via api
   await axios({
     url:
@@ -97,19 +87,27 @@ const scanUrl = async (url) => {
   });
 };
 
+const getToken = async () => {
+  const key = await secret
+    .getSecretValue({
+      SecretId: process.env.SECRET_ID
+    })
+    .promise()
+    .then((data) => {
+      return JSON.parse(data.SecretString)[process.env.SECRET_KEY];
+    });
+  return jwt.sign(
+    {
+      id: "surveillance-bot"
+    },
+    key
+  );
+};
+
 module.exports.diffCheck = async (event, context, callback) => {
   try {
-    const key = await secret
-      .getSecretValue({
-        SecretId: process.env.SECRET_ID
-      })
-      .promise()
-      .then((data) => {
-        return JSON.parse(data.SecretString)[process.env.SECRET_KEY];
-      });
-    const token = jwt.sign({}, key);
-
     const now = new Date();
+    const token = await getToken();
     const urls = await axios
       .get(process.env.GET_URLS_ENDPOINT, {
         headers: { Authorization: `Bearer ${token}` }
@@ -124,10 +122,11 @@ module.exports.diffCheck = async (event, context, callback) => {
       });
     await Promise.all(
       urls.map(async (url) => {
-        await scanUrl(url);
+        await scanUrl(url, token);
       })
     );
   } catch (err) {
     console.error(err);
+    throw new Error(err);
   }
 };
