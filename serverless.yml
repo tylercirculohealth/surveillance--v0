@@ -2,12 +2,17 @@ service: diff-checker
 configValidationMode: error
 
 frameworkVersion: "2"
+
+custom:
+  stage: "${opt:stage, self:provider.stage}"
+
 provider:
   name: aws
   runtime: nodejs12.x
   lambdaHashingVersion: 20201221
+  stage: dev
   environment:
-    DIFF_TABLE: diff
+    DIFF_TABLE: "diff-${self:custom.stage}"
     LATEST_REVISION_INDEX: latestRevision
     MIDDLEWARE_API_DOMAIN: https://bk6tatcsyl.execute-api.us-east-1.amazonaws.com/prod
     SECRET_ID: surveillance/SecretKey
