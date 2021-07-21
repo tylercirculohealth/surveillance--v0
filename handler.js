@@ -79,9 +79,7 @@ const scanUrl = async (url, token) => {
 
   // update next schedule via api
   await axios({
-    url:
-      "https://2t30hb5e29.execute-api.us-east-1.amazonaws.com/dev/url/" +
-      url.id,
+    url: `${process.env.MIDDLEWARE_API_DOMAIN}/url/${url.id}`,
     method: "PUT",
     headers: { Authorization: `Bearer ${token}` }
   });
@@ -109,7 +107,7 @@ module.exports.diffCheck = async (event, context, callback) => {
     const now = new Date();
     const token = await getToken();
     const urls = await axios
-      .get(process.env.GET_URLS_ENDPOINT, {
+      .get(`${process.env.MIDDLEWARE_API_DOMAIN}/urls`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then((res) => {
@@ -118,9 +116,9 @@ module.exports.diffCheck = async (event, context, callback) => {
             // get only urls where nextScheduledScan is in the past (or no value)
             return d.nextScheduledScan ? d.nextScheduledScan < now : true;
           })
-          .splice(0, 2);
+          .slice(0, process.env.NUM_URLS_TO_SCAN);
       });
-    await Promise.all(
+    await Promise.allSettled(
       urls.map(async (url) => {
         await scanUrl(url, token);
       })
