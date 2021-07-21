@@ -14,7 +14,7 @@ provider:
   environment:
     DIFF_TABLE: "diff-${self:custom.stage}"
     LATEST_REVISION_INDEX: latestRevision
-    MIDDLEWARE_API_DOMAIN: https://bk6tatcsyl.execute-api.us-east-1.amazonaws.com/prod
+    MIDDLEWARE_API_DOMAIN: "https://bk6tatcsyl.execute-api.us-east-1.amazonaws.com/${self:custom.stage}"
     SECRET_ID: surveillance/SecretKey
     SECRET_KEY: SECRET_KEY
     NUM_URLS_TO_SCAN: 2
