@@ -31,6 +31,7 @@ provider:
 functions:
   diffChecker:
     handler: handler.diffCheck
+    timeout: 120
     events:
       - schedule: rate(5 hours)
 
